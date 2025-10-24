@@ -1,4 +1,6 @@
-"# buongiorno" 
+# buongiorno
+
+---
 
 This project is a tool for the retail investor. 
 Instead of complex charts, it tells only one thing: where to distribute his money today.
