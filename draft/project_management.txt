@@ -1,0 +1,13 @@
+============DOING==========================
+
+- chose the best model to guess the future gold price.
+
+===========TO DO===============================
+
+
+- implement the prediction given the current scenario (local, .csv data)
+- implement somekind of cronjob to maintain the current database updated
+- deploy, in some sense, if needed
+- implement somekind of front-end user interface.
+
+=============DONE===========================

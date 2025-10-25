@@ -1,0 +1,2 @@
+prediction_date,target_date,current_price,predicted_price,change_abs,change_pct,trend,model_used,model_mape
+2025-10-24 22:20:53,2025-10-25,4126.89990234375,4147.465456031424,20.565553687673855,0.4983293555531662,ALTA ↗️,arima,0.99575420507149
