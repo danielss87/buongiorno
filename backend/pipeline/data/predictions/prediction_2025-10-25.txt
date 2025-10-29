@@ -3,7 +3,7 @@
 🌅 BUONGIORNO - PREVISÃO DE PREÇO DO OURO
 ================================================================================
 
-📅 DATA DA PREVISÃO: 24/10/2025 22:20:53
+📅 DATA DA PREVISÃO: 28/10/2025 21:24:26
 🎯 PREVISÃO PARA:    25/10/2025 (Saturday)
 
 ================================================================================
@@ -15,25 +15,25 @@ Preço Atual:         $4126.90
 ================================================================================
 🔮 PREVISÃO
 ================================================================================
-Modelo Utilizado:    ARIMA
-Preço Previsto:      $4147.47
+Modelo Utilizado:    MOVING_AVERAGE
+Preço Previsto:      $4170.14
 
-Variação Absoluta:   $+20.57
-Variação Percentual: +0.50%
+Variação Absoluta:   $+43.24
+Variação Percentual: +1.05%
 
 Tendência Esperada:  ALTA ↗️
 
 ================================================================================
 📈 INTERPRETAÇÃO
 ================================================================================
-O mercado deve permanecer ESTÁVEL, com pouca volatilidade esperada.
+ALTA MODERADA esperada. Tendência positiva no curto prazo.
 
 ================================================================================
 ⚠️  DISCLAIMER
 ================================================================================
 Esta previsão é baseada em modelos estatísticos e dados históricos.
 Não constitui recomendação de investimento.
-Erro médio do modelo (MAPE): 1.00%
+Erro médio do modelo (MAPE): 1.57%
 
 ================================================================================
 Gerado por: Projeto Buongiorno
