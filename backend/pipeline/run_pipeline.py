@@ -5,6 +5,12 @@ Pipeline completo de ponta a ponta
 
 import sys
 import os
+import io
+
+# Força UTF-8 no console (Windows)
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 # Adiciona src ao path para imports funcionarem
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
@@ -388,7 +394,7 @@ Gerado por: Projeto Buongiorno
 
 # Execução principal
 if __name__ == "__main__":
-    print("\n🚀 Iniciando Pipeline Buongiorno...\n")
+    print("\nIniciando Pipeline Buongiorno...\n")
     
     pipeline = BuongiornoMainPipeline()
     pipeline.run_full_pipeline()

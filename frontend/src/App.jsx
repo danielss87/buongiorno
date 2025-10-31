@@ -6,61 +6,37 @@ const BuongiornoDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Função para buscar dados do servidor Python
+  // URL da API
+  const API_URL = 'http://localhost:8000/api';
+
+  // Função para buscar dados da API FastAPI
   const fetchPrediction = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      // Busca o histórico de previsões
-      const response = await fetch('http://localhost:8000/predictions/predictions_history.csv');
+      // Busca a última previsão da API
+      const response = await fetch(`${API_URL}/predictions/latest`);
       
       if (!response.ok) {
-        throw new Error('Não foi possível carregar os dados. Verifique se o servidor Python está rodando.');
+        throw new Error('Não foi possível carregar os dados. Verifique se a API está rodando.');
       }
       
-      const csvText = await response.text();
+      const data = await response.json();
       
-      // Parse do CSV
-      const lines = csvText.trim().split('\n');
-      if (lines.length < 2) {
-        throw new Error('Arquivo de previsões vazio');
-      }
-      
-      // Pega a última linha (previsão mais recente)
-      const lastLine = lines[lines.length - 1];
-      const values = lastLine.split(',');
-      
-      // Parse dos dados
-      const data = {
-        predictionDate: values[0],
-        targetDate: values[1],
-        currentPrice: parseFloat(values[2]),
-        predictedPrice: parseFloat(values[3]),
-        change: parseFloat(values[4]),
-        changePct: parseFloat(values[5]),
-        trend: values[6].toLowerCase().includes('alta') ? 'up' : 
-               values[6].toLowerCase().includes('baixa') ? 'down' : 'stable',
-        modelUsed: values[7],
-        modelMape: parseFloat(values[8])
-      };
-      
-      // Formata as datas
-      const targetDateObj = new Date(data.targetDate);
-      const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-      
+      // Formata os dados recebidos
       setPrediction({
-        currentDate: new Date(data.predictionDate).toLocaleDateString('pt-BR'),
-        targetDate: targetDateObj.toLocaleDateString('pt-BR'),
-        targetDay: days[targetDateObj.getDay()],
-        currentPrice: data.currentPrice,
-        predictedPrice: data.predictedPrice,
+        currentDate: new Date(data.prediction_date).toLocaleDateString('pt-BR'),
+        targetDate: new Date(data.target_date).toLocaleDateString('pt-BR'),
+        targetDay: data.target_day,
+        currentPrice: data.current_price,
+        predictedPrice: data.predicted_price,
         change: data.change,
-        changePct: data.changePct,
+        changePct: data.change_pct,
         trend: data.trend,
-        modelUsed: data.modelUsed,
-        modelAccuracy: (100 - data.modelMape).toFixed(2),
-        confidence: data.modelMape < 1 ? 'high' : data.modelMape < 2 ? 'medium' : 'low'
+        modelUsed: data.model_used,
+        modelAccuracy: data.model_accuracy,
+        confidence: data.confidence
       });
       
       setLoading(false);
@@ -123,6 +99,7 @@ const BuongiornoDashboard = () => {
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-600 text-lg">Carregando previsão...</p>
+          <p className="text-slate-400 text-sm mt-2">Conectando à API em {API_URL}</p>
         </div>
       </div>
     );
@@ -137,7 +114,7 @@ const BuongiornoDashboard = () => {
             <AlertCircle className="w-12 h-12 text-red-600" />
             <div>
               <h2 className="text-2xl font-bold text-slate-900">Erro ao Carregar Dados</h2>
-              <p className="text-slate-600">Não foi possível conectar ao servidor Python</p>
+              <p className="text-slate-600">Não foi possível conectar à API</p>
             </div>
           </div>
           
@@ -148,9 +125,11 @@ const BuongiornoDashboard = () => {
           <div className="space-y-3 mb-6">
             <h3 className="font-semibold text-slate-900">Passos para resolver:</h3>
             <ol className="list-decimal list-inside space-y-2 text-sm text-slate-700">
-              <li>Certifique-se de que rodou: <code className="bg-slate-100 px-2 py-1 rounded">python run_pipeline.py</code></li>
-              <li>Inicie o servidor de arquivos: <code className="bg-slate-100 px-2 py-1 rounded">python serve_files.py</code></li>
-              <li>Verifique se está acessível em: <code className="bg-slate-100 px-2 py-1 rounded">http://localhost:8000</code></li>
+              <li>Certifique-se de que a API está rodando em: <code className="bg-slate-100 px-2 py-1 rounded">{API_URL}</code></li>
+              <li>Abra o Anaconda Prompt e rode: <code className="bg-slate-100 px-2 py-1 rounded">conda activate buongiorno-api</code></li>
+              <li>Navegue até: <code className="bg-slate-100 px-2 py-1 rounded">backend/api</code></li>
+              <li>Execute: <code className="bg-slate-100 px-2 py-1 rounded">python main.py</code></li>
+              <li>Certifique-se de que rodou o pipeline: <code className="bg-slate-100 px-2 py-1 rounded">python run_pipeline.py</code></li>
             </ol>
           </div>
 
@@ -194,6 +173,9 @@ const BuongiornoDashboard = () => {
               >
                 <RefreshCw className="w-5 h-5 text-slate-600" />
               </button>
+              <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full border border-green-200">
+                API Conectada
+              </div>
             </div>
           </div>
         </div>
@@ -313,7 +295,7 @@ const BuongiornoDashboard = () => {
 
         {/* Footer Info */}
         <div className="text-center mt-8 text-sm text-slate-500">
-          Powered by Buongiorno AI • Dados atualizados em tempo real via Yahoo Finance
+          Powered by Buongiorno AI • API REST FastAPI • Dados via Yahoo Finance
         </div>
       </div>
     </div>

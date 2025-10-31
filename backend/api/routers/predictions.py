@@ -5,18 +5,15 @@ Endpoints relacionados a previsões de preços
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from services.prediction_service import PredictionService
 
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional
 from datetime import datetime
 
+from services.prediction_service import PredictionService
 
-
-# Use import relativo:
-from api.services.prediction_service import PredictionService
 
 
 router = APIRouter()

@@ -8,9 +8,9 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from routers import predictions
 
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from api.routers import predictions
 import uvicorn
 
 # Inicializa aplicação

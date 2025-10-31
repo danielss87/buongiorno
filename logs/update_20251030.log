@@ -1,0 +1,55 @@
+2025-10-30 23:19:09,132 - INFO - ⏰ Início: 30/10/2025 23:19:09
+2025-10-30 23:19:09,133 - INFO - ======================================================================
+2025-10-30 23:19:09,133 - INFO - 🌅 INICIANDO ATUALIZAÇÃO AUTOMÁTICA - BUONGIORNO
+2025-10-30 23:19:09,133 - INFO - ======================================================================
+2025-10-30 23:19:09,134 - INFO - 📍 Executando: C:\Users\danie\Desktop\Python\buon_giorno\backend\pipeline\run_pipeline.py
+2025-10-30 23:19:14,795 - WARNING - ⚠️  Avisos/Erros:
+2025-10-30 23:19:14,795 - WARNING -    Traceback (most recent call last):
+2025-10-30 23:19:14,796 - WARNING -      File "C:\Users\danie\Desktop\Python\buon_giorno\backend\pipeline\run_pipeline.py", line 391, in <module>
+2025-10-30 23:19:14,796 - WARNING -        print("\n\U0001f680 Iniciando Pipeline Buongiorno...\n")
+2025-10-30 23:19:14,796 - WARNING -        ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-30 23:19:14,797 - WARNING -      File "C:\Users\danie\miniconda3\Lib\encodings\cp1252.py", line 19, in encode
+2025-10-30 23:19:14,797 - WARNING -        return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+2025-10-30 23:19:14,797 - WARNING -               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-10-30 23:19:14,798 - WARNING -    UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f680' in position 2: character maps to <undefined>
+2025-10-30 23:19:14,798 - ERROR - ❌ Pipeline falhou com código: 1
+2025-10-30 23:19:14,799 - ERROR - ======================================================================
+2025-10-30 23:19:14,799 - INFO - ⏱️  Tempo de execução: 5.67 segundos
+2025-10-30 23:19:14,800 - INFO - 🏁 Fim: 30/10/2025 23:19:14
+2025-10-30 23:19:14,800 - ERROR - 💥 Atualização falhou!
+2025-10-30 23:22:09,208 - INFO - ⏰ Início: 30/10/2025 23:22:09
+2025-10-30 23:22:09,209 - INFO - ======================================================================
+2025-10-30 23:22:09,209 - INFO - 🌅 INICIANDO ATUALIZAÇÃO AUTOMÁTICA - BUONGIORNO
+2025-10-30 23:22:09,210 - INFO - ======================================================================
+2025-10-30 23:22:09,211 - INFO - 📍 Executando: C:\Users\danie\Desktop\Python\buon_giorno\backend\pipeline\run_pipeline.py
+2025-10-30 23:22:09,343 - WARNING - ⚠️  Avisos/Erros:
+2025-10-30 23:22:09,344 - WARNING -    Traceback (most recent call last):
+2025-10-30 23:22:09,345 - WARNING -      File "C:\Users\danie\Desktop\Python\buon_giorno\backend\pipeline\run_pipeline.py", line 15, in <module>
+2025-10-30 23:22:09,347 - WARNING -        sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+2025-10-30 23:22:09,348 - WARNING -                           ^^
+2025-10-30 23:22:09,349 - WARNING -    NameError: name 'os' is not defined. Did you forget to import 'os'?
+2025-10-30 23:22:09,350 - ERROR - ❌ Pipeline falhou com código: 1
+2025-10-30 23:22:09,350 - ERROR - ======================================================================
+2025-10-30 23:22:09,351 - INFO - ⏱️  Tempo de execução: 0.14 segundos
+2025-10-30 23:22:09,352 - INFO - 🏁 Fim: 30/10/2025 23:22:09
+2025-10-30 23:22:09,353 - ERROR - 💥 Atualização falhou!
+2025-10-30 23:23:50,381 - INFO - ⏰ Início: 30/10/2025 23:23:50
+2025-10-30 23:23:50,382 - INFO - ======================================================================
+2025-10-30 23:23:50,383 - INFO - 🌅 INICIANDO ATUALIZAÇÃO AUTOMÁTICA - BUONGIORNO
+2025-10-30 23:23:50,385 - INFO - ======================================================================
+2025-10-30 23:23:50,386 - INFO - 📍 Executando: C:\Users\danie\Desktop\Python\buon_giorno\backend\pipeline\run_pipeline.py
+2025-10-30 23:25:18,674 - INFO - ✅ Pipeline executado com sucesso!
+2025-10-30 23:25:18,674 - INFO - ======================================================================
+2025-10-30 23:25:18,675 - INFO - ⏱️  Tempo de execução: 88.29 segundos
+2025-10-30 23:25:18,678 - INFO - 🏁 Fim: 30/10/2025 23:25:18
+2025-10-30 23:25:18,679 - INFO - 🎉 Atualização concluída com sucesso!
+2025-10-30 23:46:01,418 - INFO - ⏰ Início: 30/10/2025 23:46:01
+2025-10-30 23:46:01,419 - INFO - ======================================================================
+2025-10-30 23:46:01,419 - INFO - 🌅 INICIANDO ATUALIZAÇÃO AUTOMÁTICA - BUONGIORNO
+2025-10-30 23:46:01,419 - INFO - ======================================================================
+2025-10-30 23:46:01,420 - INFO - 📍 Executando: C:\Users\danie\Desktop\Python\buon_giorno\backend\pipeline\run_pipeline.py
+2025-10-30 23:46:18,209 - INFO - ✅ Pipeline executado com sucesso!
+2025-10-30 23:46:18,209 - INFO - ======================================================================
+2025-10-30 23:46:18,210 - INFO - ⏱️  Tempo de execução: 16.79 segundos
+2025-10-30 23:46:18,210 - INFO - 🏁 Fim: 30/10/2025 23:46:18
+2025-10-30 23:46:18,210 - INFO - 🎉 Atualização concluída com sucesso!
