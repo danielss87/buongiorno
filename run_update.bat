@@ -8,7 +8,7 @@ echo %date% %time%
 echo ============================================
 
 REM Ativa o ambiente conda (AJUSTE O CAMINHO SE NECESSÁRIO)
-call C:\Users\danie\anaconda3\Scripts\activate.bat buongiorno-api
+call C:\Users\danie\miniconda3\Scripts\activate.bat buongiorno-api
 
 REM Navega até a pasta do projeto
 cd /d C:\Users\danie\Desktop\Python\buon_giorno
