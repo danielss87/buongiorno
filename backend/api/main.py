@@ -6,7 +6,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(__file__))
 
-from routers import predictions
+from routers import predictions, pipeline
 
 
 from fastapi import FastAPI, HTTPException
@@ -37,6 +37,7 @@ app.add_middleware(
 
 # Incluir routers
 app.include_router(predictions.router, prefix="/api", tags=["predictions"])
+app.include_router(pipeline.router, prefix="/api", tags=["pipeline"])
 
 # Endpoint raiz
 @app.get("/")
