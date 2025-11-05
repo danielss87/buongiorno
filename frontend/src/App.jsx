@@ -6,8 +6,8 @@ const BuongiornoDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // URL da API
-  const API_URL = 'http://localhost:8000/api';
+  // URL da API (usa variável de ambiente ou localhost como fallback)
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
   // Função para buscar dados da API FastAPI
   const fetchPrediction = async () => {

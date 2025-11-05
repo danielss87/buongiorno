@@ -26,11 +26,11 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",  # Vite dev server
-        "http://localhost:3000",  # Alternativo
-        "https://seu-frontend.vercel.app"  # Deploy futuro
+        "http://localhost:5173",  # Vite dev server local
+        "http://localhost:3000",  # Alternativo local
+        "*"  # Permite todos os domínios (ajustar em produção com domínio específico)
     ],
-    allow_credentials=True,
+    allow_credentials=False,  # Set to False when using wildcard origins
     allow_methods=["*"],
     allow_headers=["*"],
 )
