@@ -221,6 +221,9 @@ class PredictionService:
             predictions_df['target_date'] = pd.to_datetime(predictions_df['target_date'])
             raw_df['Date'] = pd.to_datetime(raw_df['Date'])
 
+            # Ordena por target_date crescente (mais antiga primeiro)
+            predictions_df = predictions_df.sort_values('target_date', ascending=True)
+
             # Monta lista de histórico com erros
             history = []
 
