@@ -22,6 +22,39 @@ router = APIRouter()
 prediction_service = PredictionService()
 
 
+# TESTE: Endpoint de histórico com erros - movido para o INICIO para DEBUG
+@router.get("/predictions/history-errors")
+def get_prediction_history_errors(
+    asset: str = Query("gold", description="Ativo")
+):
+    """
+    Retorna o histórico de previsões com erros calculados
+    comparando com os valores reais
+
+    Args:
+        asset: Código do ativo
+
+    Returns:
+        Lista de previsões com erros de previsão calculados
+    """
+    try:
+        history = prediction_service.get_history_with_errors(asset=asset)
+
+        return {
+            "asset": asset,
+            "count": len(history),
+            "predictions": history
+        }
+
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Histórico não encontrado"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/predictions/latest")
 def get_latest_prediction(asset: str = Query("gold", description="Ativo (gold, silver, oil)")):
     """
@@ -60,23 +93,23 @@ def get_prediction_history(
 ):
     """
     Retorna o histórico de previsões
-    
+
     Args:
         asset: Código do ativo
         limit: Número máximo de registros
-    
+
     Returns:
         Lista de previsões históricas
     """
     try:
         history = prediction_service.get_history(asset=asset, limit=limit)
-        
+
         return {
             "asset": asset,
             "count": len(history),
             "predictions": history
         }
-    
+
     except FileNotFoundError:
         raise HTTPException(
             status_code=404,
@@ -84,6 +117,8 @@ def get_prediction_history(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
 
 
 @router.post("/predictions/generate")

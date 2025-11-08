@@ -21,11 +21,11 @@ class PredictionService:
     
     def get_latest_prediction(self, asset: str = "gold") -> Optional[Dict]:
         """
-        Retorna a última previsão disponível
-        
+        Retorna a última previsão disponível (apenas previsões futuras válidas)
+
         Args:
             asset: Código do ativo
-        
+
         Returns:
             Dicionário com dados da previsão ou None
         """
@@ -37,18 +37,33 @@ class PredictionService:
                 'predictions',
                 'predictions_history.csv'
             )
-            
+
             if not os.path.exists(csv_path):
                 raise FileNotFoundError(f"Arquivo não encontrado: {csv_path}")
-            
+
             # Lê o CSV
             df = pd.read_csv(csv_path)
-            
+
             if df.empty:
                 return None
-            
-            # Pega a última linha
-            latest = df.iloc[-1]
+
+            # Converte target_date para datetime
+            df['target_date'] = pd.to_datetime(df['target_date'])
+
+            # Filtra apenas previsões futuras (target_date >= hoje)
+            today = pd.Timestamp.now().normalize()
+            future_predictions = df[df['target_date'] >= today].copy()
+
+            # Se não há previsões futuras, retorna None
+            if future_predictions.empty:
+                return None
+
+            # Converte prediction_date para datetime e ordena
+            future_predictions['prediction_date'] = pd.to_datetime(future_predictions['prediction_date'])
+            future_predictions = future_predictions.sort_values('prediction_date', ascending=False)
+
+            # Pega a previsão mais recente (última criada)
+            latest = future_predictions.iloc[0]
             
             # Formata datas
             target_date = pd.to_datetime(latest['target_date'])
@@ -143,10 +158,10 @@ class PredictionService:
     def get_processed_data(self, asset: str = "gold") -> pd.DataFrame:
         """
         Retorna dados processados do pipeline
-        
+
         Args:
             asset: Código do ativo
-        
+
         Returns:
             DataFrame com dados processados
         """
@@ -156,12 +171,97 @@ class PredictionService:
                 'processed',
                 'gold_features.csv'
             )
-            
+
             if not os.path.exists(csv_path):
                 raise FileNotFoundError(f"Arquivo não encontrado: {csv_path}")
-            
+
             df = pd.read_csv(csv_path)
             return df
-        
+
         except Exception as e:
             raise Exception(f"Erro ao buscar dados processados: {str(e)}")
+
+    def get_history_with_errors(self, asset: str = "gold") -> List[Dict]:
+        """
+        Retorna histórico de previsões com erros calculados
+        comparando com os valores reais
+
+        Args:
+            asset: Código do ativo
+
+        Returns:
+            Lista de previsões com erros calculados
+        """
+        try:
+            # Carrega o histórico de previsões
+            predictions_path = os.path.join(
+                self.base_path,
+                'predictions',
+                'predictions_history.csv'
+            )
+
+            # Carrega os dados reais
+            raw_data_path = os.path.join(
+                self.base_path,
+                'raw',
+                'gold_prices.csv'
+            )
+
+            if not os.path.exists(predictions_path):
+                raise FileNotFoundError(f"Arquivo não encontrado: {predictions_path}")
+
+            if not os.path.exists(raw_data_path):
+                raise FileNotFoundError(f"Arquivo não encontrado: {raw_data_path}")
+
+            # Lê os dados
+            predictions_df = pd.read_csv(predictions_path)
+            raw_df = pd.read_csv(raw_data_path)
+
+            # Converte datas
+            predictions_df['target_date'] = pd.to_datetime(predictions_df['target_date'])
+            raw_df['Date'] = pd.to_datetime(raw_df['Date'])
+
+            # Monta lista de histórico com erros
+            history = []
+
+            for _, pred_row in predictions_df.iterrows():
+                target_date = pred_row['target_date']
+                predicted_price = float(pred_row['predicted_price'])
+
+                # Busca o preço real na data alvo
+                real_data = raw_df[raw_df['Date'] == target_date]
+
+                if not real_data.empty:
+                    real_price = float(real_data.iloc[0]['Close'])
+
+                    # Calcula o erro
+                    error_abs = predicted_price - real_price
+                    error_pct = (error_abs / real_price) * 100
+
+                    history.append({
+                        "prediction_date": pred_row['prediction_date'],
+                        "target_date": pred_row['target_date'].strftime('%Y-%m-%d'),
+                        "predicted_price": predicted_price,
+                        "real_price": real_price,
+                        "error_abs": round(error_abs, 2),
+                        "error_pct": round(error_pct, 2),
+                        "model_used": pred_row['model_used'],
+                        "model_mape": float(pred_row['model_mape'])
+                    })
+                else:
+                    # Se não tem o valor real ainda, retorna apenas a previsão
+                    history.append({
+                        "prediction_date": pred_row['prediction_date'],
+                        "target_date": pred_row['target_date'].strftime('%Y-%m-%d'),
+                        "predicted_price": predicted_price,
+                        "real_price": None,
+                        "error_abs": None,
+                        "error_pct": None,
+                        "model_used": pred_row['model_used'],
+                        "model_mape": float(pred_row['model_mape'])
+                    })
+
+            return history
+
+        except Exception as e:
+            raise Exception(f"Erro ao calcular histórico com erros: {str(e)}")
