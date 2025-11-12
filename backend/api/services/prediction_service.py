@@ -1,270 +1,227 @@
 """
-Buongiorno API - Serviço de Previsões
-Lógica de negócio para gerenciar previsões
+Buongiorno API - Serviço de Previsões (Database Version)
+Lógica de negócio para gerenciar previsões usando banco de dados
 """
 
-import pandas as pd
-import os
-from datetime import datetime
 from typing import Dict, List, Optional
+from datetime import datetime, date
+from sqlalchemy.orm import Session
+
+try:
+    from ..repositories.asset_repository import AssetRepository
+    from ..repositories.price_repository import PriceRepository
+    from ..repositories.prediction_repository import PredictionRepository
+except ImportError:
+    from repositories.asset_repository import AssetRepository
+    from repositories.price_repository import PriceRepository
+    from repositories.prediction_repository import PredictionRepository
 
 
 class PredictionService:
-    """Serviço para gerenciar previsões de preços"""
-    
-    def __init__(self):
-        # Caminho relativo para os dados do pipeline
-        self.base_path = os.path.join(
-            os.path.dirname(__file__),
-            '../../pipeline/data'
-        )
-    
-    def get_latest_prediction(self, asset: str = "gold") -> Optional[Dict]:
+    """Serviço para gerenciar previsões de preços (usando Database)"""
+
+    def __init__(self, db: Session):
+        self.db = db
+        self.asset_repo = AssetRepository(db)
+        self.price_repo = PriceRepository(db)
+        self.prediction_repo = PredictionRepository(db)
+
+    def get_latest_prediction(self, asset_code: str = "gold") -> Optional[Dict]:
         """
-        Retorna a última previsão disponível (apenas previsões futuras válidas)
+        Retorna a última previsão disponível
 
         Args:
-            asset: Código do ativo
+            asset_code: Código do ativo (gold, silver, oil)
 
         Returns:
             Dicionário com dados da previsão ou None
         """
-        try:
-            # Por enquanto, suporta apenas gold
-            # Depois pode adicionar lógica para outros ativos
-            csv_path = os.path.join(
-                self.base_path,
-                'predictions',
-                'predictions_history.csv'
-            )
+        # Busca o asset
+        asset = self.asset_repo.get_by_code(asset_code)
+        if not asset:
+            return None
 
-            if not os.path.exists(csv_path):
-                raise FileNotFoundError(f"Arquivo não encontrado: {csv_path}")
+        # Busca a última previsão (primeiro tenta futuras, depois qualquer uma)
+        prediction = self.prediction_repo.get_latest_by_asset(asset.id, future_only=True)
 
-            # Lê o CSV
-            df = pd.read_csv(csv_path)
+        # Se não houver previsões futuras, busca a mais recente (fallback)
+        if not prediction:
+            prediction = self.prediction_repo.get_latest_by_asset(asset.id, future_only=False)
 
-            if df.empty:
-                return None
+        if not prediction:
+            return None
 
-            # Converte target_date para datetime
-            df['target_date'] = pd.to_datetime(df['target_date'])
+        # Formata datas
+        target_date = prediction.target_date
+        days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
-            # Filtra apenas previsões futuras (target_date >= hoje)
-            today = pd.Timestamp.now().normalize()
-            future_predictions = df[df['target_date'] >= today].copy()
+        # Monta resposta
+        return {
+            "asset": asset_code,
+            "prediction_date": prediction.prediction_date.isoformat(),
+            "target_date": target_date.isoformat(),
+            "target_day": days[target_date.weekday()],
+            "current_price": prediction.current_price,
+            "predicted_price": prediction.predicted_price,
+            "change": prediction.change_abs,
+            "change_pct": prediction.change_pct,
+            "trend": prediction.trend,
+            "model_used": prediction.model_used,
+            "model_mape": prediction.model_mape,
+            "model_accuracy": round(100 - prediction.model_mape, 2),
+            "confidence": prediction.confidence
+        }
 
-            # Se não há previsões futuras, retorna None
-            if future_predictions.empty:
-                return None
-
-            # Converte prediction_date para datetime e ordena
-            future_predictions['prediction_date'] = pd.to_datetime(future_predictions['prediction_date'])
-            future_predictions = future_predictions.sort_values('prediction_date', ascending=False)
-
-            # Pega a previsão mais recente (última criada)
-            latest = future_predictions.iloc[0]
-            
-            # Formata datas
-            target_date = pd.to_datetime(latest['target_date'])
-            days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
-            
-            # Determina tendência
-            trend_text = str(latest['trend']).lower()
-            if 'alta' in trend_text:
-                trend = 'up'
-            elif 'baixa' in trend_text:
-                trend = 'down'
-            else:
-                trend = 'stable'
-            
-            # Calcula confiança baseada no MAPE
-            model_mape = float(latest['model_mape'])
-            if model_mape < 1:
-                confidence = 'high'
-            elif model_mape < 2:
-                confidence = 'medium'
-            else:
-                confidence = 'low'
-            
-            # Monta resposta
-            prediction = {
-                "asset": asset,
-                "prediction_date": latest['prediction_date'],
-                "target_date": latest['target_date'],
-                "target_day": days[target_date.dayofweek],
-                "current_price": float(latest['current_price']),
-                "predicted_price": float(latest['predicted_price']),
-                "change": float(latest['change_abs']),
-                "change_pct": float(latest['change_pct']),
-                "trend": trend,
-                "model_used": latest['model_used'],
-                "model_mape": model_mape,
-                "model_accuracy": round(100 - model_mape, 2),
-                "confidence": confidence
-            }
-            
-            return prediction
-        
-        except Exception as e:
-            raise Exception(f"Erro ao buscar previsão: {str(e)}")
-    
-    def get_history(self, asset: str = "gold", limit: int = 30) -> List[Dict]:
+    def get_history(self, asset_code: str = "gold", limit: int = 30) -> List[Dict]:
         """
         Retorna histórico de previsões
-        
+
         Args:
-            asset: Código do ativo
+            asset_code: Código do ativo
             limit: Número máximo de registros
-        
+
         Returns:
             Lista de previsões
         """
-        try:
-            csv_path = os.path.join(
-                self.base_path,
-                'predictions',
-                'predictions_history.csv'
-            )
-            
-            if not os.path.exists(csv_path):
-                raise FileNotFoundError(f"Arquivo não encontrado: {csv_path}")
-            
-            # Lê o CSV
-            df = pd.read_csv(csv_path)
-            
-            # Pega os últimos N registros
-            df = df.tail(limit)
-            
-            # Converte para lista de dicionários
-            history = []
-            for _, row in df.iterrows():
-                history.append({
-                    "prediction_date": row['prediction_date'],
-                    "target_date": row['target_date'],
-                    "current_price": float(row['current_price']),
-                    "predicted_price": float(row['predicted_price']),
-                    "change": float(row['change_abs']),
-                    "change_pct": float(row['change_pct']),
-                    "trend": row['trend'],
-                    "model_used": row['model_used']
-                })
-            
-            return history
-        
-        except Exception as e:
-            raise Exception(f"Erro ao buscar histórico: {str(e)}")
-    
-    def get_processed_data(self, asset: str = "gold") -> pd.DataFrame:
-        """
-        Retorna dados processados do pipeline
+        # Busca o asset
+        asset = self.asset_repo.get_by_code(asset_code)
+        if not asset:
+            return []
 
-        Args:
-            asset: Código do ativo
+        # Busca previsões
+        predictions = self.prediction_repo.get_by_asset(asset.id, limit=limit)
 
-        Returns:
-            DataFrame com dados processados
-        """
-        try:
-            csv_path = os.path.join(
-                self.base_path,
-                'processed',
-                'gold_features.csv'
-            )
+        # Converte para lista de dicionários
+        history = []
+        for pred in predictions:
+            history.append({
+                "prediction_date": pred.prediction_date.isoformat(),
+                "target_date": pred.target_date.isoformat(),
+                "current_price": pred.current_price,
+                "predicted_price": pred.predicted_price,
+                "change": pred.change_abs,
+                "change_pct": pred.change_pct,
+                "trend": self._format_trend(pred.trend),
+                "model_used": pred.model_used
+            })
 
-            if not os.path.exists(csv_path):
-                raise FileNotFoundError(f"Arquivo não encontrado: {csv_path}")
+        return history
 
-            df = pd.read_csv(csv_path)
-            return df
-
-        except Exception as e:
-            raise Exception(f"Erro ao buscar dados processados: {str(e)}")
-
-    def get_history_with_errors(self, asset: str = "gold") -> List[Dict]:
+    def get_history_with_errors(self, asset_code: str = "gold") -> List[Dict]:
         """
         Retorna histórico de previsões com erros calculados
-        comparando com os valores reais
 
         Args:
-            asset: Código do ativo
+            asset_code: Código do ativo
 
         Returns:
             Lista de previsões com erros calculados
         """
-        try:
-            # Carrega o histórico de previsões
-            predictions_path = os.path.join(
-                self.base_path,
-                'predictions',
-                'predictions_history.csv'
-            )
+        # Busca o asset
+        asset = self.asset_repo.get_by_code(asset_code)
+        if not asset:
+            return []
 
-            # Carrega os dados reais
-            raw_data_path = os.path.join(
-                self.base_path,
-                'raw',
-                'gold_prices.csv'
-            )
+        # Busca todas as previsões
+        predictions = self.prediction_repo.get_by_asset(asset.id)
 
-            if not os.path.exists(predictions_path):
-                raise FileNotFoundError(f"Arquivo não encontrado: {predictions_path}")
+        # Atualiza preços reais das previsões que ainda não têm
+        self._update_real_prices(asset.id, predictions)
 
-            if not os.path.exists(raw_data_path):
-                raise FileNotFoundError(f"Arquivo não encontrado: {raw_data_path}")
+        # Converte para lista de dicionários
+        history = []
+        for pred in predictions:
+            history.append({
+                "prediction_date": pred.prediction_date.isoformat() if pred.prediction_date else None,
+                "target_date": pred.target_date.isoformat(),
+                "predicted_price": pred.predicted_price,
+                "real_price": pred.real_price,
+                "error_abs": round(pred.error_abs, 2) if pred.error_abs is not None else None,
+                "error_pct": round(pred.error_pct, 2) if pred.error_pct is not None else None,
+                "model_used": pred.model_used,
+                "model_mape": pred.model_mape
+            })
 
-            # Lê os dados
-            predictions_df = pd.read_csv(predictions_path)
-            raw_df = pd.read_csv(raw_data_path)
+        return history
 
-            # Converte datas
-            predictions_df['target_date'] = pd.to_datetime(predictions_df['target_date'])
-            raw_df['Date'] = pd.to_datetime(raw_df['Date'])
-
-            # Ordena por target_date crescente (mais antiga primeiro)
-            predictions_df = predictions_df.sort_values('target_date', ascending=True)
-
-            # Monta lista de histórico com erros
-            history = []
-
-            for _, pred_row in predictions_df.iterrows():
-                target_date = pred_row['target_date']
-                predicted_price = float(pred_row['predicted_price'])
-
+    def _update_real_prices(self, asset_id: int, predictions: List) -> None:
+        """Atualiza preços reais das previsões que ainda não têm"""
+        for pred in predictions:
+            if pred.real_price is None:
                 # Busca o preço real na data alvo
-                real_data = raw_df[raw_df['Date'] == target_date]
+                real_price_record = self.price_repo.get_by_asset_and_date(asset_id, pred.target_date)
 
-                if not real_data.empty:
-                    real_price = float(real_data.iloc[0]['Close'])
+                if real_price_record:
+                    # Atualiza a previsão com o preço real
+                    self.prediction_repo.update_real_price(pred, real_price_record.close)
 
-                    # Calcula o erro
-                    error_abs = predicted_price - real_price
-                    error_pct = (error_abs / real_price) * 100
+    def _format_trend(self, trend: str) -> str:
+        """Formata o trend para exibição"""
+        trend_map = {
+            'up': 'ALTA ↗️',
+            'down': 'BAIXA ↘️',
+            'stable': 'ESTÁVEL →'
+        }
+        return trend_map.get(trend, trend)
 
-                    history.append({
-                        "prediction_date": pred_row['prediction_date'],
-                        "target_date": pred_row['target_date'].strftime('%Y-%m-%d'),
-                        "predicted_price": predicted_price,
-                        "real_price": real_price,
-                        "error_abs": round(error_abs, 2),
-                        "error_pct": round(error_pct, 2),
-                        "model_used": pred_row['model_used'],
-                        "model_mape": float(pred_row['model_mape'])
-                    })
-                else:
-                    # Se não tem o valor real ainda, retorna apenas a previsão
-                    history.append({
-                        "prediction_date": pred_row['prediction_date'],
-                        "target_date": pred_row['target_date'].strftime('%Y-%m-%d'),
-                        "predicted_price": predicted_price,
-                        "real_price": None,
-                        "error_abs": None,
-                        "error_pct": None,
-                        "model_used": pred_row['model_used'],
-                        "model_mape": float(pred_row['model_mape'])
-                    })
+    def create_prediction(self, asset_code: str, prediction_date: datetime,
+                         target_date: date, current_price: float, predicted_price: float,
+                         model_used: str, model_mape: float, model_run_id: int = None) -> Dict:
+        """
+        Cria uma nova previsão
 
-            return history
+        Args:
+            asset_code: Código do ativo
+            prediction_date: Data/hora da previsão
+            target_date: Data alvo da previsão
+            current_price: Preço atual
+            predicted_price: Preço previsto
+            model_used: Modelo usado
+            model_mape: MAPE do modelo
+            model_run_id: ID da execução do modelo
 
-        except Exception as e:
-            raise Exception(f"Erro ao calcular histórico com erros: {str(e)}")
+        Returns:
+            Dicionário com a previsão criada
+        """
+        # Busca o asset
+        asset = self.asset_repo.get_by_code(asset_code)
+        if not asset:
+            raise ValueError(f"Asset não encontrado: {asset_code}")
+
+        # Calcula variações
+        change_abs = predicted_price - current_price
+        change_pct = (change_abs / current_price) * 100
+
+        # Determina tendência
+        if change_pct > 0.1:
+            trend = 'up'
+        elif change_pct < -0.1:
+            trend = 'down'
+        else:
+            trend = 'stable'
+
+        # Determina confiança baseada no MAPE
+        if model_mape < 1:
+            confidence = 'high'
+        elif model_mape < 2:
+            confidence = 'medium'
+        else:
+            confidence = 'low'
+
+        # Cria a previsão
+        prediction = self.prediction_repo.create(
+            asset_id=asset.id,
+            prediction_date=prediction_date,
+            target_date=target_date,
+            current_price=current_price,
+            predicted_price=predicted_price,
+            change_abs=change_abs,
+            change_pct=change_pct,
+            trend=trend,
+            model_used=model_used,
+            model_mape=model_mape,
+            confidence=confidence,
+            model_run_id=model_run_id
+        )
+
+        return prediction.to_dict()

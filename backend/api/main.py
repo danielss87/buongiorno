@@ -1,23 +1,31 @@
 """
 Buongiorno API - FastAPI Backend
 API REST para previsão de preços de commodities
+ARQUITETURA SAAS - Database-driven
 """
 import sys
 import os
 sys.path.insert(0, os.path.dirname(__file__))
 
 from routers import predictions, pipeline
+from database import init_db
+from config import API_TITLE, API_VERSION, API_DESCRIPTION
 
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
+# Inicializa banco de dados
+print("Inicializando banco de dados...")
+init_db()
+print("Banco de dados pronto!")
+
 # Inicializa aplicação
 app = FastAPI(
-    title="Buongiorno API",
-    description="API de Previsão de Preços de Commodities",
-    version="1.0.0",
+    title=API_TITLE,
+    description=API_DESCRIPTION,
+    version=API_VERSION,
     docs_url="/docs",
     redoc_url="/redoc"
 )
